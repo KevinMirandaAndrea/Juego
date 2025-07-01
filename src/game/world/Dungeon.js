@@ -5,6 +5,7 @@ export class Dungeon {
         this.assetManager = assetManager;
         this.tileSize = 16;
         this.tiles = [];
+        this.items = []; // Para cofres, pociones, etc.
         
         this.generateDungeon();
     }
@@ -13,10 +14,9 @@ export class Dungeon {
         // Inicializar con paredes
         this.tiles = Array(this.height).fill().map(() => Array(this.width).fill(1));
         
-        // Crear habitaciones y pasillos usando un algoritmo simple
         this.createRooms();
         this.connectRooms();
-        this.addDetails();
+        this.addItems();
     }
     
     createRooms() {
@@ -29,7 +29,6 @@ export class Dungeon {
             const x = 1 + Math.floor(Math.random() * (this.width - roomWidth - 2));
             const y = 1 + Math.floor(Math.random() * (this.height - roomHeight - 2));
             
-            // Verificar que no se superponga con otras habitaciones
             let overlaps = false;
             for (const room of rooms) {
                 if (x < room.x + room.width + 1 && x + roomWidth + 1 > room.x &&
@@ -55,7 +54,6 @@ export class Dungeon {
     }
     
     connectRooms() {
-        // Conectar habitaciones con pasillos
         for (let i = 0; i < this.rooms.length - 1; i++) {
             const roomA = this.rooms[i];
             const roomB = this.rooms[i + 1];
@@ -69,7 +67,6 @@ export class Dungeon {
                 y: Math.floor(roomB.y + roomB.height / 2)
             };
             
-            // Crear pasillo en L
             this.createCorridor(centerA.x, centerA.y, centerB.x, centerA.y);
             this.createCorridor(centerB.x, centerA.y, centerB.x, centerB.y);
         }
@@ -94,15 +91,42 @@ export class Dungeon {
         }
     }
     
-    addDetails() {
-        // Añadir algunos elementos decorativos
-        for (let y = 1; y < this.height - 1; y++) {
-            for (let x = 1; x < this.width - 1; x++) {
-                if (this.tiles[y][x] === 0 && Math.random() < 0.05) {
-                    this.tiles[y][x] = 2; // Elemento decorativo
-                }
+    addItems() {
+        this.items = [];
+        
+        // Añadir cofres en algunas habitaciones
+        this.rooms.forEach((room, index) => {
+            if (Math.random() < 0.4) { // 40% de probabilidad de cofre por habitación
+                const x = room.x + 1 + Math.floor(Math.random() * (room.width - 2));
+                const y = room.y + 1 + Math.floor(Math.random() * (room.height - 2));
+                
+                this.items.push({
+                    type: 'chest',
+                    x: x,
+                    y: y,
+                    opened: false
+                });
             }
+        });
+        
+        // Añadir algunas pociones aleatorias
+        for (let i = 0; i < 5; i++) {
+            let x, y;
+            do {
+                x = Math.floor(Math.random() * this.width);
+                y = Math.floor(Math.random() * this.height);
+            } while (this.isWall(x, y) || this.hasItemAt(x, y));
+            
+            this.items.push({
+                type: Math.random() < 0.5 ? 'potion_red' : 'potion_blue',
+                x: x,
+                y: y
+            });
         }
+    }
+    
+    hasItemAt(x, y) {
+        return this.items.some(item => item.x === x && item.y === y);
     }
     
     isWall(x, y) {
@@ -114,7 +138,7 @@ export class Dungeon {
     
     getTile(x, y) {
         if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-            return 1; // Pared por defecto
+            return 1;
         }
         return this.tiles[y][x];
     }
@@ -125,6 +149,7 @@ export class Dungeon {
         const endX = Math.min(this.width, startX + Math.ceil(camera.width / this.tileSize) + 1);
         const endY = Math.min(this.height, startY + Math.ceil(camera.height / this.tileSize) + 1);
         
+        // Renderizar tiles
         for (let y = Math.max(0, startY); y < endY; y++) {
             for (let x = Math.max(0, startX); x < endX; x++) {
                 const tileType = this.getTile(x, y);
@@ -134,28 +159,76 @@ export class Dungeon {
                 this.renderTile(ctx, tileType, pixelX, pixelY);
             }
         }
+        
+        // Renderizar items
+        this.items.forEach(item => {
+            const pixelX = item.x * this.tileSize;
+            const pixelY = item.y * this.tileSize;
+            
+            if (camera.isVisible(pixelX, pixelY, this.tileSize, this.tileSize)) {
+                this.renderItem(ctx, item, pixelX, pixelY);
+            }
+        });
     }
     
     renderTile(ctx, tileType, x, y) {
+        let sprite = null;
+        
         switch (tileType) {
             case 0: // Suelo
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(x, y, this.tileSize, this.tileSize);
-                ctx.fillStyle = '#34495e';
-                ctx.fillRect(x + 2, y + 2, this.tileSize - 4, this.tileSize - 4);
+                sprite = this.assetManager.getSprite('floor');
+                if (!sprite) {
+                    sprite = this.assetManager.getSprite('floor_alt');
+                }
                 break;
             case 1: // Pared
-                ctx.fillStyle = '#1a252f';
-                ctx.fillRect(x, y, this.tileSize, this.tileSize);
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(x + 1, y + 1, this.tileSize - 2, this.tileSize - 2);
+                sprite = this.assetManager.getSprite('wall');
                 break;
-            case 2: // Decoración
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(x, y, this.tileSize, this.tileSize);
-                ctx.fillStyle = '#f39c12';
-                ctx.fillRect(x + 4, y + 4, 8, 8);
-                break;
+        }
+        
+        if (sprite) {
+            ctx.drawImage(sprite, x, y, this.tileSize, this.tileSize);
+        } else {
+            // Fallback con mejor diseño
+            switch (tileType) {
+                case 0: // Suelo
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillRect(x, y, this.tileSize, this.tileSize);
+                    ctx.fillStyle = '#34495e';
+                    ctx.fillRect(x + 2, y + 2, this.tileSize - 4, this.tileSize - 4);
+                    break;
+                case 1: // Pared
+                    ctx.fillStyle = '#1a252f';
+                    ctx.fillRect(x, y, this.tileSize, this.tileSize);
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillRect(x + 1, y + 1, this.tileSize - 2, this.tileSize - 2);
+                    break;
+            }
+        }
+    }
+    
+    renderItem(ctx, item, x, y) {
+        const spriteName = item.type === 'chest' && item.opened ? 'chest_open' : item.type;
+        const sprite = this.assetManager.getSprite(spriteName);
+        
+        if (sprite) {
+            ctx.drawImage(sprite, x, y, this.tileSize, this.tileSize);
+        } else {
+            // Fallback para items
+            switch (item.type) {
+                case 'chest':
+                    ctx.fillStyle = item.opened ? '#8B4513' : '#654321';
+                    ctx.fillRect(x + 2, y + 4, 12, 8);
+                    break;
+                case 'potion_red':
+                    ctx.fillStyle = '#ff4757';
+                    ctx.fillRect(x + 6, y + 4, 4, 8);
+                    break;
+                case 'potion_blue':
+                    ctx.fillStyle = '#3742fa';
+                    ctx.fillRect(x + 6, y + 4, 4, 8);
+                    break;
+            }
         }
     }
 }

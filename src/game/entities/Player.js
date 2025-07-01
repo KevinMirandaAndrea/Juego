@@ -4,15 +4,16 @@ export class Player extends Entity {
     constructor(x, y, assetManager) {
         super(x, y, 16, 16);
         this.assetManager = assetManager;
-        this.speed = 100; // píxeles por segundo
+        this.speed = 100;
         this.health = 100;
         this.maxHealth = 100;
         this.isAttacking = false;
         this.attackCooldown = 0;
-        this.attackDuration = 200; // ms
+        this.attackDuration = 200;
         this.direction = 'down';
         this.animationFrame = 0;
         this.animationTime = 0;
+        this.walkAnimationSpeed = 300; // ms entre frames
     }
     
     update(deltaTime, inputManager, dungeon) {
@@ -59,7 +60,6 @@ export class Player extends Entity {
     }
     
     updatePosition(deltaTime, dungeon) {
-        // Verificar colisiones con paredes
         const tileX = Math.floor(this.targetX / 16);
         const tileY = Math.floor(this.targetY / 16);
         
@@ -72,7 +72,7 @@ export class Player extends Entity {
     updateAnimation(deltaTime) {
         if (this.isMoving) {
             this.animationTime += deltaTime;
-            if (this.animationTime > 200) {
+            if (this.animationTime > this.walkAnimationSpeed) {
                 this.animationFrame = (this.animationFrame + 1) % 2;
                 this.animationTime = 0;
             }
@@ -97,7 +97,7 @@ export class Player extends Entity {
     
     attack() {
         this.isAttacking = true;
-        this.attackCooldown = 300; // ms
+        this.attackCooldown = 300;
     }
     
     takeDamage(amount) {
@@ -105,26 +105,55 @@ export class Player extends Entity {
     }
     
     render(ctx) {
-        // Renderizar sprite del jugador
-        const sprite = this.assetManager.getSprite('player');
+        // Usar sprites de Kenney
+        let sprite = null;
+        
+        if (this.isMoving && this.animationFrame === 1) {
+            sprite = this.assetManager.getSprite('player_walk1');
+        }
+        
+        if (!sprite) {
+            sprite = this.assetManager.getSprite('player');
+        }
+        
         if (sprite) {
+            // Aplicar efecto de ataque (tinte rojo)
+            if (this.isAttacking) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.fillStyle = '#ff8888';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.restore();
+            }
+            
             ctx.drawImage(sprite, this.x, this.y, this.width, this.height);
         } else {
-            // Fallback si no hay sprite
+            // Fallback
             ctx.fillStyle = this.isAttacking ? '#ff6b6b' : '#4ecdc4';
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
         
-        // Renderizar barra de vida
+        // Barra de vida
+        this.renderHealthBar(ctx);
+    }
+    
+    renderHealthBar(ctx) {
         const barWidth = 20;
-        const barHeight = 4;
+        const barHeight = 3;
         const barX = this.x - 2;
-        const barY = this.y - 8;
+        const barY = this.y - 6;
         
-        ctx.fillStyle = '#333';
+        // Fondo de la barra
+        ctx.fillStyle = '#000';
+        ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+        
+        // Barra roja (daño)
+        ctx.fillStyle = '#ff4757';
         ctx.fillRect(barX, barY, barWidth, barHeight);
         
-        ctx.fillStyle = '#4ecdc4';
+        // Barra verde (vida actual)
+        ctx.fillStyle = '#2ed573';
         const healthPercent = this.health / this.maxHealth;
         ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
     }

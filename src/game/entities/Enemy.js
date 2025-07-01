@@ -4,15 +4,23 @@ export class Enemy extends Entity {
     constructor(x, y, assetManager) {
         super(x, y, 16, 16);
         this.assetManager = assetManager;
-        this.speed = 30; // más lento que el jugador
+        this.speed = 30;
         this.health = 20;
         this.damage = 5;
         this.lastAttackTime = 0;
-        this.attackCooldown = 1000; // ms
+        this.attackCooldown = 1000;
         this.detectionRange = 80;
         this.direction = Math.random() * Math.PI * 2;
         this.wanderTime = 0;
-        this.state = 'wandering'; // wandering, chasing, attacking
+        this.state = 'wandering';
+        this.enemyType = this.getRandomEnemyType();
+        this.animationTime = 0;
+        this.animationFrame = 0;
+    }
+    
+    getRandomEnemyType() {
+        const types = ['enemy_orc', 'enemy_skeleton', 'enemy_goblin'];
+        return types[Math.floor(Math.random() * types.length)];
     }
     
     update(deltaTime, player, dungeon) {
@@ -27,6 +35,7 @@ export class Enemy extends Entity {
         }
         
         this.updatePosition(deltaTime, dungeon);
+        this.updateAnimation(deltaTime);
     }
     
     chasePlayer(player, deltaTime) {
@@ -47,18 +56,17 @@ export class Enemy extends Entity {
     wander(deltaTime) {
         this.wanderTime += deltaTime;
         
-        if (this.wanderTime > 2000) { // Cambiar dirección cada 2 segundos
+        if (this.wanderTime > 2000) {
             this.direction = Math.random() * Math.PI * 2;
             this.wanderTime = 0;
         }
         
-        const moveSpeed = this.speed * 0.5 * (deltaTime / 1000); // Más lento al vagar
+        const moveSpeed = this.speed * 0.5 * (deltaTime / 1000);
         this.targetX = this.x + Math.cos(this.direction) * moveSpeed;
         this.targetY = this.y + Math.sin(this.direction) * moveSpeed;
     }
     
     updatePosition(deltaTime, dungeon) {
-        // Verificar colisiones con paredes
         const tileX = Math.floor(this.targetX / 16);
         const tileY = Math.floor(this.targetY / 16);
         
@@ -66,18 +74,35 @@ export class Enemy extends Entity {
             this.x = this.targetX;
             this.y = this.targetY;
         } else {
-            // Si choca con una pared, cambiar dirección
             this.direction = Math.random() * Math.PI * 2;
         }
     }
     
+    updateAnimation(deltaTime) {
+        this.animationTime += deltaTime;
+        if (this.animationTime > 500) {
+            this.animationFrame = (this.animationFrame + 1) % 2;
+            this.animationTime = 0;
+        }
+    }
+    
     render(ctx) {
-        // Renderizar sprite del enemigo
-        const sprite = this.assetManager.getSprite('enemy');
+        // Usar sprite específico del tipo de enemigo
+        const sprite = this.assetManager.getSprite(this.enemyType);
+        
         if (sprite) {
-            ctx.drawImage(sprite, this.x, this.y, this.width, this.height);
+            // Efecto visual cuando está persiguiendo
+            if (this.state === 'chasing') {
+                ctx.save();
+                ctx.shadowColor = '#ff4757';
+                ctx.shadowBlur = 4;
+                ctx.drawImage(sprite, this.x, this.y, this.width, this.height);
+                ctx.restore();
+            } else {
+                ctx.drawImage(sprite, this.x, this.y, this.width, this.height);
+            }
         } else {
-            // Fallback si no hay sprite
+            // Fallback
             ctx.fillStyle = this.state === 'chasing' ? '#ff4757' : '#ff6b6b';
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
@@ -85,7 +110,7 @@ export class Enemy extends Entity {
         // Indicador de estado
         if (this.state === 'chasing') {
             ctx.fillStyle = '#ff4757';
-            ctx.fillRect(this.x + 6, this.y - 4, 4, 2);
+            ctx.fillRect(this.x + 6, this.y - 3, 4, 2);
         }
     }
 }
