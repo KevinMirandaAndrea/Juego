@@ -1,30 +1,57 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Platformer Adventure</title>
+    <title>Mystic Realms - 2D Platformer Adventure</title>
     <style>
-        body {
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #FFB347 0%, #DEB887 50%, #D2691E 100%);
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            font-family: 'Courier New', monospace;
+            font-family: 'Orbitron', monospace;
             overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+        
+        @keyframes backgroundShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
         
         #gameContainer {
             position: relative;
-            border: 4px solid #8B4513;
-            border-radius: 12px;
+            border: 3px solid #00d4ff;
+            border-radius: 16px;
             box-shadow: 
-                0 0 30px rgba(139, 69, 19, 0.6),
-                inset 0 0 20px rgba(255, 179, 71, 0.1);
-            background: #2F1B14;
+                0 0 40px rgba(0, 212, 255, 0.5),
+                inset 0 0 20px rgba(0, 212, 255, 0.1);
+            background: #0a0a0a;
+            overflow: hidden;
         }
         
         #gameCanvas {
@@ -32,110 +59,242 @@
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
-            border-radius: 8px;
+            border-radius: 13px;
         }
         
         #ui {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            color: #FFD700;
-            font-size: 16px;
-            font-weight: bold;
+            top: 20px;
+            left: 20px;
+            color: #00d4ff;
+            font-size: 14px;
+            font-weight: 700;
             text-shadow: 
-                2px 2px 0px #000,
-                -1px -1px 0px #000,
-                1px -1px 0px #000,
-                -1px 1px 0px #000;
+                0 0 10px rgba(0, 212, 255, 0.8),
+                2px 2px 0px rgba(0, 0, 0, 0.8);
             z-index: 10;
-            background: rgba(47, 27, 20, 0.8);
-            padding: 10px;
-            border-radius: 8px;
-            border: 2px solid #8B4513;
+            background: rgba(10, 10, 10, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(5px);
         }
         
         #ui div {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        #instructions {
+        .ui-icon {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            border-radius: 3px;
+            display: inline-block;
+        }
+        
+        .health-bar {
+            width: 100px;
+            height: 8px;
+            background: rgba(255, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757, #ff6b7a);
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        
+        .energy-bar {
+            width: 80px;
+            height: 6px;
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        #controls {
             position: absolute;
-            bottom: 15px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: #DEB887;
-            font-size: 14px;
+            color: #00d4ff;
+            font-size: 12px;
             text-align: center;
-            text-shadow: 
-                2px 2px 0px #000,
-                -1px -1px 0px #000,
-                1px -1px 0px #000,
-                -1px 1px 0px #000;
-            background: rgba(47, 27, 20, 0.8);
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: 2px solid #8B4513;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+            background: rgba(10, 10, 10, 0.8);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(5px);
         }
         
-        /* Efecto de brillo para el contenedor */
+        .control-group {
+            display: inline-block;
+            margin: 0 15px;
+        }
+        
+        .key {
+            background: linear-gradient(145deg, #1a1a2e, #0f0f23);
+            border: 2px solid #00d4ff;
+            border-radius: 6px;
+            padding: 4px 8px;
+            margin: 0 2px;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+        
         #gameContainer::before {
             content: '';
             position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #FFD700, #FFA500, #FF6347, #FFD700);
-            border-radius: 14px;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc, #00ff88, #00d4ff);
+            border-radius: 19px;
             z-index: -1;
-            opacity: 0.3;
-            animation: glow 3s ease-in-out infinite alternate;
+            animation: borderGlow 3s ease-in-out infinite alternate;
         }
         
-        @keyframes glow {
-            from { opacity: 0.2; }
-            to { opacity: 0.4; }
+        @keyframes borderGlow {
+            from { 
+                opacity: 0.5;
+                filter: blur(5px);
+            }
+            to { 
+                opacity: 0.8;
+                filter: blur(8px);
+            }
         }
         
-        /* Animación de partículas de fondo */
-        #gameContainer::after {
-            content: '';
+        #loadingScreen {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: 
-                radial-gradient(2px 2px at 20px 30px, #FFD700, transparent),
-                radial-gradient(2px 2px at 40px 70px, #FFA500, transparent),
-                radial-gradient(1px 1px at 90px 40px, #FF6347, transparent),
-                radial-gradient(1px 1px at 130px 80px, #FFD700, transparent);
-            background-repeat: repeat;
-            background-size: 150px 100px;
-            animation: sparkle 4s linear infinite;
-            opacity: 0.1;
-            pointer-events: none;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            border-radius: 13px;
         }
         
-        @keyframes sparkle {
-            from { transform: translateY(0px); }
-            to { transform: translateY(-100px); }
+        .loading-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
+            margin-bottom: 30px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .loading-bar {
+            width: 300px;
+            height: 8px;
+            background: rgba(0, 212, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 2px solid rgba(0, 212, 255, 0.5);
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        }
+        
+        .loading-text {
+            color: #00d4ff;
+            font-size: 14px;
+            margin-top: 15px;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="ui">
-            <div>❤️ Vida: <span id="health">100</span></div>
-            <div>⭐ Puntos: <span id="score">0</span></div>
-            <div>🏰 Nivel: <span id="level">1</span></div>
+        <canvas id="gameCanvas" width="1024" height="768"></canvas>
+        
+        <div id="loadingScreen">
+            <div class="loading-title">MYSTIC REALMS</div>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loadingProgress"></div>
+            </div>
+            <div class="loading-text" id="loadingText">Initializing magical worlds...</div>
         </div>
-        <div id="instructions">
-            🎮 A/D o ← → para moverte • ESPACIO/W/↑ para saltar • 🦘 Salta sobre enemigos para derrotarlos • 💎 Recoge gemas y monedas
+        
+        <div id="ui" style="display: none;">
+            <div>
+                <span class="ui-icon"></span>
+                <span>Health:</span>
+                <div class="health-bar">
+                    <div class="health-fill" id="healthFill" style="width: 100%"></div>
+                </div>
+                <span id="healthText">100/100</span>
+            </div>
+            <div>
+                <span class="ui-icon"></span>
+                <span>Energy:</span>
+                <div class="energy-bar">
+                    <div class="energy-fill" id="energyFill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div>
+                <span class="ui-icon"></span>
+                <span>Score: <span id="score">0</span></span>
+            </div>
+            <div>
+                <span class="ui-icon"></span>
+                <span>Level: <span id="level">1</span></span>
+            </div>
+            <div>
+                <span class="ui-icon"></span>
+                <span>Biome: <span id="biome">Forest</span></span>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <div class="control-group">
+                <span class="key">A</span><span class="key">D</span> Move
+            </div>
+            <div class="control-group">
+                <span class="key">SPACE</span> Jump
+            </div>
+            <div class="control-group">
+                <span class="key">SHIFT</span> Dash
+            </div>
+            <div class="control-group">
+                <span class="key">W</span> Wall Jump
+            </div>
         </div>
     </div>
+    
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
