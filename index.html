@@ -8,7 +8,7 @@
         body {
             margin: 0;
             padding: 0;
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #8B4513 0%, #CD853F 50%, #DEB887 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,9 +19,12 @@
         
         #gameContainer {
             position: relative;
-            border: 3px solid #444;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            border: 4px solid #654321;
+            border-radius: 12px;
+            box-shadow: 
+                0 0 30px rgba(139, 69, 19, 0.6),
+                inset 0 0 20px rgba(255, 215, 0, 0.1);
+            background: #2F1B14;
         }
         
         #gameCanvas {
@@ -29,27 +32,69 @@
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
+            border-radius: 8px;
         }
         
         #ui {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-size: 14px;
-            text-shadow: 2px 2px 0px #000;
+            top: 15px;
+            left: 15px;
+            color: #FFD700;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 
+                2px 2px 0px #000,
+                -1px -1px 0px #000,
+                1px -1px 0px #000,
+                -1px 1px 0px #000;
             z-index: 10;
+            background: rgba(47, 27, 20, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #8B4513;
+        }
+        
+        #ui div {
+            margin-bottom: 5px;
         }
         
         #instructions {
             position: absolute;
-            bottom: 10px;
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            color: #ccc;
-            font-size: 12px;
+            color: #DEB887;
+            font-size: 14px;
             text-align: center;
-            text-shadow: 1px 1px 0px #000;
+            text-shadow: 
+                2px 2px 0px #000,
+                -1px -1px 0px #000,
+                1px -1px 0px #000,
+                -1px 1px 0px #000;
+            background: rgba(47, 27, 20, 0.8);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 2px solid #8B4513;
+        }
+        
+        /* Efecto de brillo para el contenedor */
+        #gameContainer::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF6347, #FFD700);
+            border-radius: 14px;
+            z-index: -1;
+            opacity: 0.3;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { opacity: 0.2; }
+            to { opacity: 0.4; }
         }
     </style>
 </head>
@@ -57,12 +102,12 @@
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="ui">
-            <div>Vida: <span id="health">100</span></div>
-            <div>Puntos: <span id="score">0</span></div>
-            <div>Nivel: <span id="level">1</span></div>
+            <div>❤️ Vida: <span id="health">100</span></div>
+            <div>⭐ Puntos: <span id="score">0</span></div>
+            <div>🏰 Nivel: <span id="level">1</span></div>
         </div>
         <div id="instructions">
-            Usa WASD o las flechas para moverte • ESPACIO para atacar • Explora la mazmorra
+            🎮 Usa WASD o las flechas para moverte • ⚔️ ESPACIO para atacar • 🗝️ Explora la mazmorra
         </div>
     </div>
     <script type="module" src="/src/main.js"></script>

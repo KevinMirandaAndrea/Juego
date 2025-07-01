@@ -14,6 +14,7 @@ export class Player extends Entity {
         this.animationFrame = 0;
         this.animationTime = 0;
         this.walkAnimationSpeed = 300; // ms entre frames
+        this.glowEffect = 0;
     }
     
     update(deltaTime, inputManager, dungeon) {
@@ -21,6 +22,7 @@ export class Player extends Entity {
         this.updatePosition(deltaTime, dungeon);
         this.updateAnimation(deltaTime);
         this.updateAttack(deltaTime);
+        this.updateEffects(deltaTime);
     }
     
     handleInput(inputManager, deltaTime) {
@@ -95,6 +97,13 @@ export class Player extends Entity {
         }
     }
     
+    updateEffects(deltaTime) {
+        this.glowEffect += deltaTime * 0.005;
+        if (this.glowEffect > Math.PI * 2) {
+            this.glowEffect = 0;
+        }
+    }
+    
     attack() {
         this.isAttacking = true;
         this.attackCooldown = 300;
@@ -116,12 +125,18 @@ export class Player extends Entity {
             sprite = this.assetManager.getSprite('player');
         }
         
+        // Efecto de brillo sutil
+        ctx.save();
+        const glowIntensity = Math.sin(this.glowEffect) * 0.3 + 0.7;
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 3 * glowIntensity;
+        
         if (sprite) {
-            // Aplicar efecto de ataque (tinte rojo)
+            // Aplicar efecto de ataque (tinte dorado)
             if (this.isAttacking) {
                 ctx.save();
                 ctx.globalCompositeOperation = 'multiply';
-                ctx.fillStyle = '#ff8888';
+                ctx.fillStyle = '#FFD700';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.restore();
@@ -129,32 +144,46 @@ export class Player extends Entity {
             
             ctx.drawImage(sprite, this.x, this.y, this.width, this.height);
         } else {
-            // Fallback
-            ctx.fillStyle = this.isAttacking ? '#ff6b6b' : '#4ecdc4';
+            // Fallback con colores más cálidos
+            ctx.fillStyle = this.isAttacking ? '#FFD700' : '#4ecdc4';
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
         
-        // Barra de vida
+        ctx.restore();
+        
+        // Barra de vida mejorada
         this.renderHealthBar(ctx);
     }
     
     renderHealthBar(ctx) {
         const barWidth = 20;
-        const barHeight = 3;
+        const barHeight = 4;
         const barX = this.x - 2;
-        const barY = this.y - 6;
+        const barY = this.y - 8;
+        
+        // Sombra de la barra
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(barX, barY + 1, barWidth + 2, barHeight + 2);
         
         // Fondo de la barra
-        ctx.fillStyle = '#000';
-        ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+        ctx.fillStyle = '#2F1B14';
+        ctx.fillRect(barX, barY, barWidth + 2, barHeight + 2);
+        
+        // Borde dorado
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barWidth + 2, barHeight + 2);
         
         // Barra roja (daño)
-        ctx.fillStyle = '#ff4757';
-        ctx.fillRect(barX, barY, barWidth, barHeight);
+        ctx.fillStyle = '#DC143C';
+        ctx.fillRect(barX + 1, barY + 1, barWidth, barHeight);
         
         // Barra verde (vida actual)
-        ctx.fillStyle = '#2ed573';
         const healthPercent = this.health / this.maxHealth;
-        ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+        const gradient = ctx.createLinearGradient(barX + 1, barY + 1, barX + 1 + barWidth, barY + 1);
+        gradient.addColorStop(0, '#32CD32');
+        gradient.addColorStop(1, '#228B22');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(barX + 1, barY + 1, barWidth * healthPercent, barHeight);
     }
 }
