@@ -17,6 +17,7 @@ export class Dungeon {
         this.createRooms();
         this.connectRooms();
         this.addItems();
+        this.addDecorations();
     }
     
     createRooms() {
@@ -109,20 +110,53 @@ export class Dungeon {
             }
         });
         
-        // Añadir algunas pociones aleatorias
-        for (let i = 0; i < 5; i++) {
+        // Añadir pociones y gemas
+        for (let i = 0; i < 8; i++) {
             let x, y;
             do {
                 x = Math.floor(Math.random() * this.width);
                 y = Math.floor(Math.random() * this.height);
             } while (this.isWall(x, y) || this.hasItemAt(x, y));
             
+            const itemTypes = ['potion_red', 'potion_blue', 'gem_blue', 'gem_red', 'gem_green', 'coin', 'key'];
+            const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+            
             this.items.push({
-                type: Math.random() < 0.5 ? 'potion_red' : 'potion_blue',
+                type: randomType,
                 x: x,
                 y: y
             });
         }
+    }
+    
+    addDecorations() {
+        // Añadir decoraciones como antorchas, calaveras, etc.
+        this.rooms.forEach(room => {
+            // Antorchas en las esquinas de algunas habitaciones
+            if (Math.random() < 0.3) {
+                this.items.push({
+                    type: 'torch',
+                    x: room.x,
+                    y: room.y,
+                    decoration: true
+                });
+            }
+            
+            // Calaveras ocasionales
+            if (Math.random() < 0.2) {
+                const x = room.x + Math.floor(Math.random() * room.width);
+                const y = room.y + Math.floor(Math.random() * room.height);
+                
+                if (!this.hasItemAt(x, y)) {
+                    this.items.push({
+                        type: 'skull',
+                        x: x,
+                        y: y,
+                        decoration: true
+                    });
+                }
+            }
+        });
     }
     
     hasItemAt(x, y) {
@@ -212,7 +246,17 @@ export class Dungeon {
         const sprite = this.assetManager.getSprite(spriteName);
         
         if (sprite) {
-            ctx.drawImage(sprite, x, y, this.tileSize, this.tileSize);
+            // Efecto especial para gemas (brillo)
+            if (item.type.includes('gem')) {
+                ctx.save();
+                ctx.shadowColor = item.type === 'gem_blue' ? '#3742fa' : 
+                                 item.type === 'gem_red' ? '#ff4757' : '#2ed573';
+                ctx.shadowBlur = 3;
+                ctx.drawImage(sprite, x, y, this.tileSize, this.tileSize);
+                ctx.restore();
+            } else {
+                ctx.drawImage(sprite, x, y, this.tileSize, this.tileSize);
+            }
         } else {
             // Fallback para items
             switch (item.type) {
@@ -226,6 +270,14 @@ export class Dungeon {
                     break;
                 case 'potion_blue':
                     ctx.fillStyle = '#3742fa';
+                    ctx.fillRect(x + 6, y + 4, 4, 8);
+                    break;
+                case 'coin':
+                    ctx.fillStyle = '#f1c40f';
+                    ctx.fillRect(x + 6, y + 6, 4, 4);
+                    break;
+                case 'key':
+                    ctx.fillStyle = '#f39c12';
                     ctx.fillRect(x + 6, y + 4, 4, 8);
                     break;
             }

@@ -19,7 +19,7 @@ export class Enemy extends Entity {
     }
     
     getRandomEnemyType() {
-        const types = ['enemy_orc', 'enemy_skeleton', 'enemy_goblin'];
+        const types = ['enemy_orc', 'enemy_skeleton', 'enemy_goblin', 'enemy_bat', 'enemy_spider', 'enemy_slime'];
         return types[Math.floor(Math.random() * types.length)];
     }
     
