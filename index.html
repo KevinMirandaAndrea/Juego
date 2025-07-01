@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Dungeon Adventure</title>
+    <title>Pixel Platformer Adventure</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #8B4513 0%, #CD853F 50%, #DEB887 100%);
+            background: linear-gradient(135deg, #FFB347 0%, #DEB887 50%, #D2691E 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,11 +19,11 @@
         
         #gameContainer {
             position: relative;
-            border: 4px solid #654321;
+            border: 4px solid #8B4513;
             border-radius: 12px;
             box-shadow: 
                 0 0 30px rgba(139, 69, 19, 0.6),
-                inset 0 0 20px rgba(255, 215, 0, 0.1);
+                inset 0 0 20px rgba(255, 179, 71, 0.1);
             background: #2F1B14;
         }
         
@@ -96,6 +96,32 @@
             from { opacity: 0.2; }
             to { opacity: 0.4; }
         }
+        
+        /* Animación de partículas de fondo */
+        #gameContainer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #FFD700, transparent),
+                radial-gradient(2px 2px at 40px 70px, #FFA500, transparent),
+                radial-gradient(1px 1px at 90px 40px, #FF6347, transparent),
+                radial-gradient(1px 1px at 130px 80px, #FFD700, transparent);
+            background-repeat: repeat;
+            background-size: 150px 100px;
+            animation: sparkle 4s linear infinite;
+            opacity: 0.1;
+            pointer-events: none;
+            border-radius: 8px;
+        }
+        
+        @keyframes sparkle {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-100px); }
+        }
     </style>
 </head>
 <body>
@@ -107,7 +133,7 @@
             <div>🏰 Nivel: <span id="level">1</span></div>
         </div>
         <div id="instructions">
-            🎮 Usa WASD o las flechas para moverte • ⚔️ ESPACIO para atacar • 🗝️ Explora la mazmorra
+            🎮 A/D o ← → para moverte • ESPACIO/W/↑ para saltar • 🦘 Salta sobre enemigos para derrotarlos • 💎 Recoge gemas y monedas
         </div>
     </div>
     <script type="module" src="/src/main.js"></script>
